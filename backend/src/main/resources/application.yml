@@ -6,16 +6,16 @@ spring:
     name: speedbilling-backend
 
   datasource:
-    url: ${SUPABASE_DB_URL:jdbc:postgresql://localhost:5432/speedbilling}
+    url: ${SUPABASE_DB_URL:jdbc:postgresql://localhost:6543/speedbilling?pgbouncer=true}
     username: ${SUPABASE_DB_USER:postgres}
     password: ${SUPABASE_DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 10
+      maximum-pool-size: 12
       minimum-idle: 2
       idle-timeout: 300000
       connection-timeout: 30000
-    connection-test-query: SELECT 1
+      leak-detection-threshold: 60000
 
   jpa:
     hibernate:
@@ -25,8 +25,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        connection:
+          provider_disables_autocommit: true
         jdbc:
           time_zone: UTC
+          lob:
+            non_contextual_creation: true
 
   jackson:
     serialization:
