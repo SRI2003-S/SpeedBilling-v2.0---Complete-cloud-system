@@ -40,12 +40,13 @@ spring:
       max-request-size: 50MB
 
   session:
-    timeout: 28800  # 8 hours in seconds
+    timeout: 604800  # 7 days in seconds
     cookie:
       name: JSESSIONID
       path: /
       secure: true
       http-only: true
+      same-site: none
 
 # Supabase Configuration
 supabase:

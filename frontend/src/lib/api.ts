@@ -4,13 +4,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const api = axios.create({
   baseURL: API_BASE + "/api",
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Add auth token to every request
+// Response interceptor for error handling
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("auth_token");
@@ -33,18 +33,10 @@ api.interceptors.response.use(
 
 // ===================== Auth API =====================
 export const authApi = {
-  login: async (username: string, password: string) => {
-    const response = await api.post("/auth/login", { username, password });
-    if (response.data?.success && response.data?.data?.token) {
-      localStorage.setItem("auth_token", response.data.data.token);
-    }
-    return response;
-  },
+  login: (username: string, password: string) =>
+    api.post("/auth/login", { username, password }),
 
-  logout: () => {
-    localStorage.removeItem("auth_token");
-    return api.post("/auth/logout");
-  },
+  logout: () => api.post("/auth/logout"),
 
   getSession: () => api.get("/auth/session"),
 };

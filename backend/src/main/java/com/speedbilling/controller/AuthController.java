@@ -23,9 +23,7 @@ public class AuthController {
             HttpSession session) {
         try {
             LoginResponse response = authService.login(request, session);
-            // Create a simple token: userId:role:sessionId
-            String token = response.getUserId() + ":" + response.getRole() + ":" + session.getId();
-            response.setToken(token);
+            // Include user info for frontend
             return ResponseEntity.ok(ApiResponse.success("Login successful", response));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
