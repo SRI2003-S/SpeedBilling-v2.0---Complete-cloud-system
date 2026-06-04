@@ -58,7 +58,7 @@ supabase:
 
 # CORS
 cors:
-  allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,https://speed-billing-v2-0-complete-cloud-s.vercel.app}
 
 # Logging
 logging:
