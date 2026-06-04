@@ -1,9 +1,24 @@
 #!/bin/sh
-# Start both backend and frontend
-echo "Starting SpeedBilling..."
-echo "Starting Backend (Spring Boot) on port 8080..."
-java -jar /app/app.jar --server.port=8080 &
-echo "Starting Frontend (Next.js) on port 3000..."
-cd /app/frontend && node server.js --port=3000 &
-# Wait for any process to exit
-wait
+# ============================================================
+# SpeedBilling Backend - Docker Entrypoint
+# Loads .env file and passes variables to Spring Boot
+# ============================================================
+
+# Load .env file if present next to the jar
+ENV_DIR="$(dirname "$0")"
+if [ -f "$ENV_DIR/.env" ]; then
+    echo "Loading environment from $ENV_DIR/.env"
+    set -a
+    . "$ENV_DIR/.env"
+    set +a
+elif [ -f /app/.env ]; then
+    echo "Loading environment from /app/.env"
+    set -a
+    . /app/.env
+    set +a
+fi
+
+echo "Starting SpeedBilling Backend..."
+echo "DB URL: ${SUPABASE_DB_URL:-using application.yml default}"
+
+exec java -jar /app/app.jar --server.port=8080
