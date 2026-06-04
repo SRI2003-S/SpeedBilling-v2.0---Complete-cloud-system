@@ -41,6 +41,11 @@ spring:
 
   session:
     timeout: 28800  # 8 hours in seconds
+    cookie:
+      name: JSESSIONID
+      path: /
+      secure: true
+      http-only: true
 
 # Supabase Configuration
 supabase:
