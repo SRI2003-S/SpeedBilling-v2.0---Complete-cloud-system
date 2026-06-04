@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { authApi, productApi, orderApi } from "@/lib/api";
+import { authApi, productApi, orderApi, customerApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import {
   Loader2, Search, ShoppingCart, Plus, Minus, Trash2,
-  Barcode, Package, User, LogOut, X, Receipt
+  Barcode, Package, User, LogOut, X, Receipt, UserPlus
 } from "lucide-react";
 
 export default function CashierDashboard() {
@@ -16,6 +16,28 @@ export default function CashierDashboard() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [cart, setCart] = useState<any[]>([]);
   const [barcodeInput, setBarcodeInput] = useState("");
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [customerForm, setCustomerForm] = useState({ name: "", phoneNumber: "", email: "" });
+  const [customerSaving, setCustomerSaving] = useState(false);
+
+  const handleCreateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCustomerSaving(true);
+    try {
+      await customerApi.create({
+        name: customerForm.name,
+        phoneNumber: customerForm.phoneNumber,
+        email: customerForm.email,
+      });
+      toast.success("Customer created!");
+      setShowNewCustomer(false);
+      setCustomerForm({ name: "", phoneNumber: "", email: "" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create customer");
+    } finally {
+      setCustomerSaving(false);
+    }
+  };
 
   useEffect(() => {
     checkAuth();
@@ -143,6 +165,12 @@ export default function CashierDashboard() {
           <h1 className="text-xl font-bold text-gray-900">Billing</h1>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowNewCustomer(true)}
+            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" /> New Customer
+          </button>
           <span className="text-sm text-gray-500">{username}</span>
           <button
             onClick={handleLogout}
@@ -303,6 +331,62 @@ export default function CashierDashboard() {
           </div>
         </div>
       </div>
+
+      {/* New Customer Modal */}
+      {showNewCustomer && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">New Customer</h2>
+              <button onClick={() => setShowNewCustomer(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateCustomer} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={customerForm.name}
+                  onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                  className="input-field"
+                  placeholder="Customer name"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={customerForm.phoneNumber}
+                  onChange={(e) => setCustomerForm({ ...customerForm, phoneNumber: e.target.value })}
+                  className="input-field"
+                  placeholder="Phone number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={customerForm.email}
+                  onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                  className="input-field"
+                  placeholder="Email address"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={customerSaving} className="btn-primary flex-1 disabled:opacity-50">
+                  {customerSaving ? "Creating..." : "Create Customer"}
+                </button>
+                <button type="button" onClick={() => setShowNewCustomer(false)} className="btn-secondary">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
