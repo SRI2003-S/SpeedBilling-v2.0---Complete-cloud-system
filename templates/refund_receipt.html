@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{ url_for('static', filename='tailwind.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='lucide.min.js') }}"></script>
+    <title>Refund #{{ r.return_id }}</title>
+    <style>
+        @page { margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            width: 80mm; 
+            margin: 0;
+            padding: 5mm;
+            font-size: 10px;
+            color: #000;
+        }
+        .header { text-align: center; margin-bottom: 10px; }
+        .store-name { font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        .meta { font-size: 9px; margin-bottom: 5px; }
+        
+        .divider { border-bottom: 1px dashed #000; margin: 5px 0; }
+        
+        .bill-info { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .bill-info-col { display: flex; flex-direction: column; }
+        
+        .title-box {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            border: 1px solid #000;
+            padding: 3px;
+            margin: 5px 0;
+            background: #eee;
+        }
+
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th { text-align: left; border-bottom: 1px solid #000; padding: 2px 0; font-size: 8px; }
+        td { padding: 4px 0; vertical-align: top; }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: bold; }
+        
+        /* Column Widths */
+        .col-item { width: 50%; }
+        .col-qty { width: 15%; }
+        .col-rate { width: 15%; }
+        .col-amt { width: 20%; }
+
+        .totals-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-top: 5px; border-top: 1px dashed #000; padding-top: 5px;}
+        
+        .footer { text-align: center; margin-top: 15px; font-size: 9px; }
+        
+        .signature-section {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+        }
+        .sign-box {
+            width: 40%;
+            border-top: 1px solid #000;
+            text-align: center;
+            padding-top: 2px;
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="header">
+        <div class="store-name">APPOLLO PHARMACY</div>
+        <div class="meta">MARTHANDAM, TAMIL NADU</div>
+        <div class="meta">Phone: 0987654321</div>
+        <div class="meta font-bold">GSTIN: 33AAHASHDAHDS</div>
+    </div>
+
+    <div class="title-box">REFUND BILL</div>
+
+    <div class="bill-info">
+        <div class="bill-info-col">
+            <span>Return ID: <b>RET-{{ r.return_id }}</b></span>
+            <span>Date: {{ r.return_time.strftime('%d-%m-%y') }}</span>
+        </div>
+        <div class="bill-info-col text-right">
+            <span>Orig. Inv: <b>{{ original_invoice }}</b></span>
+            <span>Time: {{ r.return_time.strftime('%H:%M') }}</span>
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="col-item">Item Description</th>
+                <th class="col-qty text-center">Qty</th>
+                <th class="col-rate text-right">Rate</th>
+                <th class="col-amt text-right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td class="text-center">{{ item.qty }}</td>
+                <td class="text-right">{{ "%.2f"|format(item.rate) }}</td>
+                <td class="text-right">{{ "%.2f"|format(item.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <div class="totals-row">
+        <span>REFUND TOTAL:</span>
+        <span>Rs. {{ "%.2f"|format(r.refund_amount|abs) }}</span>
+    </div>
+
+    <div class="footer">
+        <p>* Stock added back to inventory *</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="sign-box">Authorized Signatory<br>({{ cashier.username }})</div>
+    </div>
+
+</body>
+</html>

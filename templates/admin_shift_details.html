@@ -1,0 +1,123 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <a href="/admin/shifts" class="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Shift #{{ shift.shift_id }}</h1>
+                <p class="text-sm text-gray-500">Cashier: <span class="font-bold text-gray-800">{{ cashier_name }}</span> | {{ shift.start_time.strftime('%d %b %Y') }}</p>
+            </div>
+        </div>
+        
+        <form method="GET" class="relative">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search Bill No or Customer..." 
+                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
+            <span class="absolute left-3 top-2.5 text-gray-400">
+                <i data-lucide="search" class="w-4 h-4"></i>
+            </span>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-t-4 border-t-blue-500">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Net Sales</p>
+            <h3 class="text-xl font-bold text-gray-900 mt-1">₹ {{ "%.2f"|format(net_sales) }}</h3>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-t-4 border-t-green-500">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Net Cash</p>
+            <h3 class="text-xl font-bold text-gray-900 mt-1">₹ {{ "%.2f"|format(net_cash) }}</h3>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-t-4 border-t-purple-500">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">UPI</p>
+            <h3 class="text-xl font-bold text-gray-900 mt-1">₹ {{ "%.2f"|format(upi) }}</h3>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-t-4 border-t-orange-500">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Card</p>
+            <h3 class="text-xl font-bold text-gray-900 mt-1">₹ {{ "%.2f"|format(card) }}</h3>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 border-t-4 border-t-red-500">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Refunds</p>
+            <h3 class="text-xl font-bold text-red-600 mt-1">₹ {{ "%.2f"|format(total_refunds) }}</h3>
+        </div>
+
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-900">Transactions</h3>
+            {% if search_query %}
+            <a href="/admin/shift/{{ shift.shift_id }}" class="text-xs font-medium text-red-600 hover:underline">Clear Search</a>
+            {% endif %}
+        </div>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Method</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                {% for t in transactions %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ t.date }}</td>
+                    
+                    <td class="px-6 py-4 text-sm font-medium text-blue-600 cursor-pointer hover:underline"
+                        onclick="openDoc('{{ t.id }}', {{ 'true' if t.is_refund else 'false' }}, '{{ t.return_pk if t.is_refund else '' }}')">
+                        {{ t.id }}
+                    </td>
+
+                    <td class="px-6 py-4">
+                        {% if t.is_refund %}
+                            <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">REFUND</span>
+                        {% else %}
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">BILL</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ t.customer }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ t.method }}</td>
+                    <td class="px-6 py-4 text-right text-sm font-bold {{ 'text-red-600' if t.is_refund else 'text-gray-900' }}">
+                        {{ '-' if t.is_refund else '' }} ₹ {{ "%.2f"|format(t.amount) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center text-gray-500">No transactions found matching your search.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    function openDoc(docId, isRefund, returnPk) {
+        const w = 400, h = 600;
+        const left = (screen.width - w) / 2;
+        const top = (screen.height - h) / 2;
+        
+        let url = "";
+        if(isRefund) {
+            url = `/print_refund/${returnPk}`; 
+        } else {
+            url = `/print_receipt/${docId}`;
+        }
+        window.open(url, 'Doc', `width=${w},height=${h},top=${top},left=${left}`);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: speedbilling-backend
+
+  datasource:
+    url: ${SUPABASE_DB_URL:jdbc:postgresql://localhost:5432/speedbilling}
+    username: ${SUPABASE_DB_USER:postgres}
+    password: ${SUPABASE_DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 30000
+    connection-test-query: SELECT 1
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
+    time-zone: UTC
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+  session:
+    timeout: 28800  # 8 hours in seconds
+
+# Supabase Configuration
+supabase:
+  url: ${SUPABASE_URL:https://your-project.supabase.co}
+  anon-key: ${SUPABASE_ANON_KEY:your-anon-key}
+  storage:
+    url: ${SUPABASE_STORAGE_URL:https://your-project.supabase.co/storage/v1}
+    bucket: ${SUPABASE_BUCKET:hair-extension-photos}
+    max-file-size: 5242880  # 5MB in bytes
+
+# CORS
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+
+# Logging
+logging:
+  level:
+    com.speedbilling: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN

@@ -1,0 +1,54 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Shift Management</h1>
+            <p class="text-sm text-gray-500">View performance per cashier session.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Shift ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Cashier</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Timing</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Net Sales</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Cash (Net)</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">UPI</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Card</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Refunds</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for s in shifts %}
+                <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location='/admin/shift/{{ s.id }}'">
+                    <td class="px-6 py-4 text-sm font-medium text-blue-600">#{{ s.id }}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ s.cashier }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        <div>{{ s.start }}</div>
+                        <div class="text-xs text-gray-400">to {{ s.end }}</div>
+                    </td>
+                    <td class="px-6 py-4 text-right text-sm font-bold text-gray-900">₹ {{ "%.2f"|format(s.net_sales) }}</td>
+                    <td class="px-6 py-4 text-right text-sm text-gray-600">₹ {{ "%.2f"|format(s.net_cash) }}</td>
+                    <td class="px-6 py-4 text-right text-sm text-gray-600">₹ {{ "%.2f"|format(s.upi) }}</td>
+                    <td class="px-6 py-4 text-right text-sm text-gray-600">₹ {{ "%.2f"|format(s.card) }}</td>
+                    <td class="px-6 py-4 text-right text-sm text-red-500">₹ {{ "%.2f"|format(s.refunds) }}</td>
+                    <td class="px-6 py-4 text-center">
+                        {% if s.status == 'Active' %}
+                            <span class="px-2 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full">ACTIVE</span>
+                        {% else %}
+                            <span class="px-2 py-1 text-xs font-bold bg-gray-100 text-gray-600 rounded-full">CLOSED</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

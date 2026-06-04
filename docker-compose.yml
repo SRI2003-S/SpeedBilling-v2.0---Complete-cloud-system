@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-build
+    image: speedbilling-backend:latest
+    container_name: speedbilling-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=${SUPABASE_DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${SUPABASE_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_STORAGE_URL=${SUPABASE_STORAGE_URL}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+    env_file:
+      - .env
+    networks:
+      - speedbilling-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: speedbilling-frontend:latest
+    container_name: speedbilling-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    networks:
+      - speedbilling-network
+
+networks:
+  speedbilling-network:
+    driver: bridge

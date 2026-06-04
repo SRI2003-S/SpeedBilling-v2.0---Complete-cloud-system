@@ -1,0 +1,182 @@
+-- ============================================================
+-- SpeedBilling Migration Guide: SQLite → PostgreSQL
+-- ============================================================
+-- 
+-- This guide provides step-by-step instructions for migrating
+-- from the existing SQLite database to Supabase PostgreSQL.
+--
+-- ============================================================
+-- STEP 1: Export SQLite Data to CSV
+-- ============================================================
+-- 
+-- Run these commands in the existing Flask app directory:
+-- 
+-- sqlite3 database.db <<EOF
+-- .headers on
+-- .mode csv
+-- .output migrated_users.csv
+-- SELECT * FROM user;
+-- .output migrated_products.csv
+-- SELECT * FROM products;
+-- .output migrated_batches.csv
+-- SELECT * FROM batches;
+-- .output migrated_customers.csv
+-- SELECT * FROM customers;
+-- .output migrated_orders.csv
+-- SELECT * FROM orders;
+-- .output migrated_order_items.csv
+-- SELECT * FROM order_items;
+-- .output migrated_payments.csv
+-- SELECT * FROM payments;
+-- .output migrated_returns.csv
+-- SELECT * FROM returns;
+-- .output migrated_return_items.csv
+-- SELECT * FROM return_items;
+-- .output migrated_active_bills.csv
+-- SELECT * FROM active_bills;
+-- .output migrated_shifts.csv
+-- SELECT * FROM shift_management;
+-- .quit
+-- EOF
+--
+-- ============================================================
+-- STEP 2: Create Supabase Project
+-- ============================================================
+--
+-- 1. Go to https://supabase.com and sign up/login
+-- 2. Click "New Project"
+-- 3. Fill in:
+--    - Name: speedbilling
+--    - Database Password: (generate strong password)
+--    - Region: (choose closest to your location)
+-- 4. Wait for database provisioning (~2 minutes)
+-- 5. Go to Project Settings → Database → Connection string
+--    Copy the JDBC URL
+--
+-- ============================================================
+-- STEP 3: Run Schema Migration
+-- ============================================================
+--
+-- In Supabase dashboard:
+-- 1. Go to SQL Editor
+-- 2. Open the file database/001_initial_schema.sql
+-- 3. Run the entire script
+-- 4. Verify all tables are created:
+--    SELECT table_name FROM information_schema.tables 
+--    WHERE table_schema = 'public';
+--
+-- ============================================================
+-- STEP 4: Import CSV Data
+-- ============================================================
+--
+-- Using Supabase dashboard SQL Editor:
+--
+-- Note: Import in dependency order (no foreign key conflicts)
+--
+-- 1. Import Users:
+--    \copy users(username, password_hash, role, created_at, expiration_date)
+--    FROM 'migrated_users.csv' DELIMITER ',' CSV HEADER;
+--
+-- 2. Import Products:
+--    \copy products(barcode, product_name, composition, manufacturer, schedule_type, category, hsn_code, tax_rate)
+--    FROM 'migrated_products.csv' DELIMITER ',' CSV HEADER;
+--
+-- 3. Import Customers:
+--    \copy customers(phone_number, name, email)
+--    FROM 'migrated_customers.csv' DELIMITER ',' CSV HEADER;
+--
+-- 4. Import Batches:
+--    \copy batches(product_id, batch_code, expiry_date, cost_price, mrp, selling_price, stocks)
+--    FROM 'migrated_batches.csv' DELIMITER ',' CSV HEADER;
+--
+-- 5. Import Shifts:
+--    \copy shift_management(user_id, opening_cash, final_cash, start_time, end_time, status)
+--    FROM 'migrated_shifts.csv' DELIMITER ',' CSV HEADER;
+--
+-- 6. Import Orders:
+--    \copy orders(invoice_no, customer_id, shift_id, total_amount_before_tax, tax_amount, discount_amount, doctor_name, final_amount, status, created_at)
+--    FROM 'migrated_orders.csv' DELIMITER ',' CSV HEADER;
+--
+-- 7. Import Order Items:
+--    \copy order_items(order_id, product_id, batch_id, item_name, quantity, unit_price, total_price, avail_return_items)
+--    FROM 'migrated_order_items.csv' DELIMITER ',' CSV HEADER;
+--
+-- 8. Import Payments:
+--    \copy payments(order_id, cash, upi, card, total_paid, excess_amount, payment_time, upi_txn_id, card_txn_id)
+--    FROM 'migrated_payments.csv' DELIMITER ',' CSV HEADER;
+--
+-- 9. Import Returns:
+--    \copy returns(order_id, shift_id, refund_amount, return_time)
+--    FROM 'migrated_returns.csv' DELIMITER ',' CSV HEADER;
+--
+-- 10. Import Return Items:
+--     \copy return_items(return_id, product_id, quantity)
+--     FROM 'migrated_return_items.csv' DELIMITER ',' CSV HEADER;
+--
+-- 11. Import Active Bills:
+--     \copy active_bills(user_id, bills_data, last_updated)
+--     FROM 'migrated_active_bills.csv' DELIMITER ',' CSV HEADER;
+--
+-- ============================================================
+-- STEP 5: Verify Migration
+-- ============================================================
+--
+-- Run verification queries:
+--
+-- SELECT 'users' as tbl, COUNT(*) FROM users
+-- UNION ALL
+-- SELECT 'products', COUNT(*) FROM products
+-- UNION ALL
+-- SELECT 'batches', COUNT(*) FROM batches
+-- UNION ALL
+-- SELECT 'customers', COUNT(*) FROM customers
+-- UNION ALL
+-- SELECT 'orders', COUNT(*) FROM orders
+-- UNION ALL
+-- SELECT 'payments', COUNT(*) FROM payments;
+--
+-- Verify foreign keys:
+-- SELECT COUNT(*) FROM orders o
+-- LEFT JOIN customers c ON o.customer_id = c.customer_id
+-- WHERE c.customer_id IS NULL;
+--
+-- ============================================================
+-- STEP 6: Update Application Configuration
+-- ============================================================
+--
+-- Set these environment variables in your deployment:
+--
+-- SUPABASE_DB_URL=jdbc:postgresql://[PROJECT_REF].supabase.co:5432/postgres
+-- SUPABASE_DB_USER=postgres
+-- SUPABASE_DB_PASSWORD=[YOUR_PASSWORD]
+-- SUPABASE_URL=https://[PROJECT_REF].supabase.co
+-- SUPABASE_ANON_KEY=[YOUR_ANON_KEY]
+-- SUPABASE_STORAGE_URL=https://[PROJECT_REF].supabase.co/storage/v1
+-- SUPABASE_BUCKET=hair-extension-photos
+--
+-- ============================================================
+-- STEP 7: Setup Supabase Storage
+-- ============================================================
+--
+-- 1. Go to Storage in Supabase dashboard
+-- 2. Create bucket "hair-extension-photos"
+-- 3. Set bucket to public
+-- 4. Configure CORS:
+--    - Allowed origins: *, http://localhost:3000, https://your-frontend.vercel.app
+--    - Allowed methods: GET, POST, PUT, DELETE
+--    - Allowed headers: *
+-- 5. Create folder structure:
+--    customers/{customer_id}/
+--    customers/{customer_id}/profile/
+--    customers/{customer_id}/sessions/{session_id}/
+--
+-- ============================================================
+-- ROLLBACK PLAN (if needed)
+-- ============================================================
+--
+-- To revert the migration and go back to SQLite:
+-- 1. Keep the old database.db file (it's not modified)
+-- 2. The Flask app still works with SQLite independently
+-- 3. Both systems can run side-by-side during testing
+-- 4. To drop all PostgreSQL tables:
+--    DROP SCHEMA public CASCADE; CREATE SCHEMA public;
