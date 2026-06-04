@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SpeedBilling - Create initial admin and cashier users with proper BCrypt hashes
+SpeedBilling - Update user credentials
 """
 
 import psycopg2
@@ -18,40 +18,32 @@ conn = psycopg2.connect(
 conn.autocommit = True
 cur = conn.cursor()
 
-# Check if table exists
-cur.execute("""
-    SELECT EXISTS (SELECT FROM information_schema.tables
-                   WHERE table_schema='public' AND table_name='users')
-""")
-if not cur.fetchone()[0]:
-    print("Users table not found - backend hasn't created it yet.")
-    print("Please access the login page once to trigger JPA, then re-run.")
-    cur.close()
-    conn.close()
-    exit(1)
-
-# Delete old placeholder users if any
-cur.execute("DELETE FROM public.users WHERE username IN ('admin', 'cashier')")
-
-# Real BCrypt hashes
-ADMIN_HASH = "$2b$10$eChkMX1EEcAG1f.im/58vuzsyHAwMqi0xg2u2yMgMNjrEXRTCzGV6"
-CASHIER_HASH = "$2b$10$p6m4kfkKNWI6MpklMEUhbOjjkgm0YDb7qHQV3AHb3qgkKD9L7mjni"
+# BCrypt hashes
+# Srinesh@2003
+ADMIN_HASH = "$2b$10$7GclzXMBNoEFcZk.6DiruupnbJALz18rDKf3eBPQ3/l7TVT2nqsVy"
+# BeemBoy@123
+CASHIER_HASH = "$2b$10$eIk.v.MZYBqPdAbe.wpsIuVElhRcw8DLaTMnuCLslw0Xxz1rh6VaC"
 
 now = datetime.utcnow()
 expiry = now + timedelta(days=365)
 
-cur.execute("""
-    INSERT INTO public.users (username, password_hash, role, created_at, expiration_date, is_active, updated_at)
-    VALUES (%s,%s,%s,%s,%s,%s,%s)
-""", ("admin", ADMIN_HASH, "admin", now, expiry, True, now))
-print("Created: admin / admin123")
+# Delete old users
+cur.execute("DELETE FROM public.users WHERE username IN ('admin', 'cashier', 'Srinesh', 'Employee1')")
 
+# Create admin: Srinesh / Srinesh@2003
 cur.execute("""
     INSERT INTO public.users (username, password_hash, role, created_at, expiration_date, is_active, updated_at)
     VALUES (%s,%s,%s,%s,%s,%s,%s)
-""", ("cashier", CASHIER_HASH, "cashier", now, expiry, True, now))
-print("Created: cashier / cashier123")
+""", ("Srinesh", ADMIN_HASH, "admin", now, expiry, True, now))
+print("Created: Srinesh / Srinesh@2003 (admin)")
+
+# Create cashier: Employee1 / BeemBoy@123
+cur.execute("""
+    INSERT INTO public.users (username, password_hash, role, created_at, expiration_date, is_active, updated_at)
+    VALUES (%s,%s,%s,%s,%s,%s,%s)
+""", ("Employee1", CASHIER_HASH, "cashier", now, expiry, True, now))
+print("Created: Employee1 / BeemBoy@123 (cashier)")
 
 cur.close()
 conn.close()
-print("Done! You can now login.")
+print("Done!")
